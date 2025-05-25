@@ -178,7 +178,7 @@ DocProject/Help/html
 
 # Click-Once directory
 publish/
-!Presentation Tier/publish/
+!publish/
 
 
 
