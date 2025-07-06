@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 
 namespace Interface_Tier.DTOs.User_DTOs
 {
-    public class UserDTO: SimpleUserDataDTO
+    public class SimpleUserDataDTO
     {
-        public string Email { get; set; }
+        public string Username { get; set; }
+        public string ImagePath { get; set; }
     }
 }

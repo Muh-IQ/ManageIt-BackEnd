@@ -1,67 +1,50 @@
-﻿using Business_Tier;
-using Business_Tier.Cloudinary_Service;
-using Business_Tier.Email_Service;
-using Business_Tier.Internal_service.Auths_Service;
-using Business_Tier.Internal_service.Cryptography_service;
-using Data_Access_Tier;
-using Interface_Tier.Repository;
-using Interface_Tier.Service;
-using Interface_Tier.Service.Internal_service.Auths_Service;
+﻿using Presentation_Tier.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// register DI Internal service
-builder.Services.AddTransient<ICryptographyService, CryptographyService>();
-builder.Services.AddTransient<IAccessTokenService, AccessTokenService>();
-builder.Services.AddTransient<IRefreshTokenService, RefreshTokenService>();
-builder.Services.AddTransient<IRefreshTokenRepository, RefreshTokenRepository>();
+// JWT setting 
+builder.Services.AddJWTServices();
 
-// register DI Third-party services
-builder.Services.AddTransient<IEmailService, SendGridService>();
-builder.Services.AddTransient<IImageService, CloudinaryService>();
+// Register DI 
+builder.Services.AddInternalServices();
+builder.Services.AddThirdPartyServices();
+builder.Services.AddOrdinaryServices();
 
-
-
-//----------------------------------\\
-
-builder.Services.AddTransient<IUserService, UserService>();
-builder.Services.AddTransient<IUserRepository, UserRepository>();
-
-
-    
-;builder.Services.AddTransient<IOTPService, OTPService>();
-builder.Services.AddTransient<IOTPRepository, OTPRepository>();
-
-
-
+//  Add CORS policy
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowVercelFrontend", policy =>
+    {
+        policy.WithOrigins("https://manage-it-nine.vercel.app")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-//if (app.Environment.IsDevelopment())
-//{
-//    app.UseSwagger();
-//    app.UseSwaggerUI();
-//}
 app.UseSwagger();
 app.UseSwaggerUI();
-///
-///
-//////
 
-
+//  Use the CORS policy
+app.UseCors("AllowVercelFrontend");
 
 app.UseHttpsRedirection();
 
+app.UseWebSockets(); // enable WebSocket
+
+app.UseMiddleware<WebSocketJwtMiddleware>();
+
+app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapWebSocketEndpoint();
 app.MapControllers();
 
 app.Run();

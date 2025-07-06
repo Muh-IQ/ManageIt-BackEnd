@@ -12,8 +12,8 @@ using System.Threading.Tasks;
 
 namespace Business_Tier
 {
-    public class UserService(IUserRepository repository, ICryptographyService cryptography ,
-        IImageService imageService , IAccessTokenService tokenService, IRefreshTokenService refreshTokenService) : IUserService
+    public class UserService(IUserRepository repository, ICryptographyService cryptography,
+        IImageService imageService, IAccessTokenService tokenService, IRefreshTokenService refreshTokenService) : IUserService
     {
         public async Task<int> AddUser(AddUserServiceDTO user)
         {
@@ -51,9 +51,31 @@ namespace Business_Tier
             return await tokenService.GetAccessToken(RefreshToken);
         }
 
+        public async Task<SimpleUserDataDTO> GetSimpleUserData(int UserID)
+        {
+            return await repository.GetSimpleUserData(UserID);
+        }
+
+        public async Task<UserDTO> GetUser(int UserID)
+        {
+            return await repository.GetUser(UserID);
+        }
+
+        public async Task<int> GetUserIDByEmail(string email)
+        {
+            return await repository.GetUserIDByEmail(email);
+        }
+
         public async Task<bool> IsEmailVerifiedExists(string email)
         {
             return await repository.IsEmailVerifiedExists(email);
+        }
+
+        public async Task<bool> IsPasswordMatched(int UserID, string Password)
+        {
+            // Hashed password to Matching with HashedPassword in db
+            string HashedPassword = cryptography.HashPassword(Password);
+            return await repository.IsPasswordMatched(UserID, HashedPassword);
         }
 
         public async Task<(string AccessToken, string RefreshToken)> Login(string email, string password)
@@ -71,6 +93,41 @@ namespace Business_Tier
                 }
             }
             return (null, null);
+        }
+
+        public async Task<bool> UpdatePassword(int UserID, string OldPassword, string Password)
+        {
+            bool res = await IsPasswordMatched(UserID, OldPassword);
+            if (!res) return false;
+            
+            // Hashed password to Matching with HashedPassword in db
+            string HashedPassword = cryptography.HashPassword(Password);
+
+            return await repository.UpdatePassword(UserID, HashedPassword);
+        }
+
+        public async Task<bool> UpdateUser(UpdateUserServiceDTO dTO)
+        {
+            UpdateUserRepositoryDTO updateUser = new UpdateUserRepositoryDTO()
+            {
+                Email = dTO.Email,
+                UserID = dTO.UserID,
+                Username = dTO.Username,
+            };
+
+            if (dTO.image != null)
+            {
+                // check is it image
+                CheckTypeOfImage(dTO.image);
+                //upload image to thired parties
+                string ImageURL = await imageService.UploadImageAsync(dTO.image);
+                if (string.IsNullOrEmpty(ImageURL))
+                    throw new Exception("An error occurred while post image in third parties");
+
+                updateUser.ImagePath = ImageURL;
+            }
+            
+            return await repository.UpdateUser(updateUser);
         }
 
         private void CheckTypeOfImage(IFormFile image)

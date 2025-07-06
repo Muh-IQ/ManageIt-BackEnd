@@ -4,10 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Interface_Tier.DTOs.User_DTOs
+namespace Interface_Tier.Utiltiy
 {
-    public class UserDTO: SimpleUserDataDTO
+    public enum Permission
     {
-        public string Email { get; set; }
+        Member = 1,
+        Owner = 2,
+        TaskLeader = 3
     }
+
 }

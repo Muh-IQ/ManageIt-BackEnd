@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Interface_Tier.DTOs.User_DTOs
+namespace Interface_Tier.Service.Internal_service.Communication_Service
 {
-    public class UserDTO: SimpleUserDataDTO
+    public interface IWebSocketMessagingFactory
     {
-        public string Email { get; set; }
+
     }
 }
